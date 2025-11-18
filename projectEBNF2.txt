@@ -1,0 +1,30 @@
+<code> ::= <line>;{<line>;}
+<line> ::=<assign>|<if-stat>|<while>|<for-loop>|<break>|<continue>|<function>|<return>|<print>
+<type> ::= int | float
+<struct> ::= struct <var-name> '{' { <type> <var-name> ';' } '}'
+<assign> ::= assign <type> [ '[' <value> ']' ] <var-name> [ '=' <expression> ]
+<var-name> ::= <letter> { <letter> | <digit> | '_' }
+<value> ::= <var-name>|<int>|<float>|<array>|<function-call>|'(' <expression> ')'
+<array> ::= '[' { <value> ',' } [ <value> ] ']'
+<int> ::= <digit> { <digit> }
+<float> ::= <int> '.' <int>
+<digit> ::= '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'
+<letter> ::=a|b|c|d|e|f|g|h|i|j|k|l|m|n|o|p|q|r|s|t|u|v|w|x|y|z|A|B|C|D|E|F|G|H|I|J|K|L|M|N|O|P|Q|R|S|T|U|V|W|X|Y|Z
+<expression> ::= <term> { ('+' | '-' | 'or') <term> }
+<term> ::= <factor> { ('*' | '/' | '%' | 'and') <factor> }
+<factor> ::= <value> | '(' <expression> ')' | 'not' <factor> | <cast>
+<cast> ::= '(' <type> ')' <value>  // explicit casting
+<operator> ::= '+' | '-' | '*' | '/' | '%' | '==' | '!=' | '<' | '<=' | '>' | '>='
+<condition> ::= <expression> { <gate> <expression> }
+<gate> ::= and | or
+<if-stat> ::= if '(' <condition> ')' '{' <code> '}' [ else '{' <code> '}' ]
+<while> ::= while '(' <condition> ')' '{' <code> '}'
+<for-loop> ::= for '(' <assign> ';' <condition> ';' <assign> ')' '{' <code> '}'
+<break> ::= break
+<continue> ::= continue
+<function> ::= function <type> <var-name> '(' [ <parameters> ] ')' '{' <code> '}'
+<parameters> ::= <type> <var-name> { ',' <type> <var-name> }
+<function-call> ::= <var-name> '(' [ <arguments> ] ')'
+<arguments> ::= <value> { ',' <value> }
+<return> ::= return [ <value> ]
+<print> ::=print'('<value>')'
