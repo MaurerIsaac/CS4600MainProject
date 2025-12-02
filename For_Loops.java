@@ -9,6 +9,23 @@ interface Statement {
     void accept(ASTVisitor visitor);
 }
 
+class BlockStatement implements Statement {
+    private final List<Statement> statements;
+
+    public BlockStatement(List<Statement> statements) {
+        this.statements = statements;
+    }
+
+    public List<Statement> getStatements() {
+        return statements;
+    }
+
+    @Override
+    public void accept(ASTVisitor visitor) {
+        visitor.visit(this);
+    }
+}
+
 class ForLoopStatement implements Statement {
     private final Statement initialization;
 
@@ -29,6 +46,28 @@ class ForLoopStatement implements Statement {
     public Expression getCondition() { return condition; }
     public Statement getUpdate() { return update; }
     public List<Statement> getBody() { return body; }
+
+    @Override
+    public void accept(ASTVisitor visitor) {
+        visitor.visit(this);
+    }
+}
+
+class IfStatement implements Statement {
+    private final Expression condition;
+    private final List<Statement> thenBody;
+
+    private final Statement elseStatement;
+
+    public IfStatement(Expression condition, List<Statement> thenBody, Statement elseStatement) {
+        this.condition = condition;
+        this.thenBody = thenBody;
+        this.elseStatement = elseStatement;
+    }
+
+    public Expression getCondition() { return condition; }
+    public List<Statement> getThenBody() { return thenBody; }
+    public Statement getElseStatement() { return elseStatement; }
 
     @Override
     public void accept(ASTVisitor visitor) {
@@ -120,6 +159,8 @@ class VariableReference implements Expression {
 
 interface ASTVisitor {
     void visit(ForLoopStatement statement);
+    void visit(IfStatement statement);
+    void visit(BlockStatement statement);
     void visit(AssignmentStatement statement);
     void visit(PrintStatement statement);
     void visit(IntegerLiteral expression);
@@ -152,6 +193,37 @@ class ASTPrinterVisitor implements ASTVisitor {
             bodyStmt.accept(new ASTPrinterVisitor());
         }
         System.out.println(indent + "Body (End)");
+    }
+
+    @Override
+    public void visit(IfStatement s) {
+        System.out.print("IF (");
+        s.getCondition().accept(this);
+        System.out.println(")");
+        System.out.println(indent + "THEN (Start):");
+        for (Statement bodyStmt : s.getThenBody()) {
+            System.out.print(indent + indent);
+            bodyStmt.accept(new ASTPrinterVisitor());
+        }
+        System.out.println(indent + "THEN (End)");
+
+        if (s.getElseStatement() != null) {
+            System.out.print(indent + "ELSE: ");
+            if (s.getElseStatement() instanceof IfStatement) {
+                s.getElseStatement().accept(this);
+            } else {
+                System.out.println("(Start)");
+                s.getElseStatement().accept(this);
+            }
+        }
+    }
+
+    @Override
+    public void visit(BlockStatement s) {
+        for (Statement stmt : s.getStatements()) {
+            System.out.print(indent + indent + indent);
+            stmt.accept(new ASTPrinterVisitor());
+        }
     }
 
     @Override
@@ -207,16 +279,42 @@ public class ForLoopAST {
         );
 
 
-        List<Statement> body = new ArrayList<>();
-        body.add(new PrintStatement(
+        List<Statement> forBody = new ArrayList<>();
+        forBody.add(new PrintStatement(
             new VariableReference("i")
         ));
 
-        ForLoopStatement forLoop = new ForLoopStatement(init, condition, update, body);
+        ForLoopStatement forLoop = new ForLoopStatement(init, condition, update, forBody);
 
-        System.out.println("--- Generating AST Structure ---");
+
+        List<Statement> elseStatements = new ArrayList<>();
+        elseStatements.add(new PrintStatement(new IntegerLiteral(3)));
+        BlockStatement elseBlock = new BlockStatement(elseStatements);
+
+        List<Statement> elseIfBody = new ArrayList<>();
+        elseIfBody.add(new PrintStatement(new IntegerLiteral(2)));
+        IfStatement elseIf = new IfStatement(
+            new LessThanExpression(new VariableReference("i"), new IntegerLiteral(4)),
+            elseIfBody,
+            elseBlock
+        );
+
+        List<Statement> ifBody = new ArrayList<>();
+        ifBody.add(new PrintStatement(new IntegerLiteral(1)));
+        IfStatement ifElseIfElse = new IfStatement(
+            new LessThanExpression(new VariableReference("i"), new IntegerLiteral(2)),
+            ifBody,
+            elseIf
+        );
+
+
+        System.out.println("--- Generating AST Structure for FOR Loop ---");
         ASTPrinterVisitor visitor = new ASTPrinterVisitor();
         visitor.print(forLoop);
-        System.out.println("------------------------------");
+        System.out.println("-------------------------------------------");
+
+        System.out.println("\n--- Generating AST Structure for IF/ELSE/IF ---");
+        visitor.print(ifElseIfElse);
+        System.out.println("---------------------------------------------");
     }
 }
